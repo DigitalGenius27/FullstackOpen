@@ -60,23 +60,29 @@ const App = () => {
       })
   }, [])
 
-  const addPerson = (event) => {
-    event.preventDefault()
+  const addPerson = event => {
+  event.preventDefault()
 
-    if (persons.some(person => person.name === newName)) {
-      alert(`${newName} is already added to phonebook`)
-      return
-    }
+  const existingPerson = persons.find(person => person.name === newName)
 
-    const personObject = {
-      name: newName,
-      number: newNumber
-    }
-
-    setPersons(persons.concat(personObject))
-    setNewName('')
-    setNewNumber('')
+  if (existingPerson) {
+    alert(`${newName} is already added to phonebook`)
+    return
   }
+
+  const personObject = {
+    name: newName,
+    number: newNumber
+  }
+
+  axios
+    .post('http://localhost:3001/persons', personObject)
+    .then(response => {
+      setPersons(persons.concat(response.data))
+      setNewName('')
+      setNewNumber('')
+    })
+}
 
   const handleNameChange = (event) => {
     setNewName(event.target.value)
