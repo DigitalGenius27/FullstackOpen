@@ -22,11 +22,9 @@ const PersonForm = ({
       <div>
         name: <input value={newName} onChange={onNameChange} />
       </div>
-
       <div>
         number: <input value={newNumber} onChange={onNumberChange} />
       </div>
-
       <div>
         <button type="submit">add</button>
       </div>
@@ -39,7 +37,7 @@ const Persons = ({ persons, onDelete }) => {
     <div>
       {persons.map(person =>
         <p key={person.id}>
-          {person.name} {person.number}{' '}
+          {person.name} {person.number}
           <button onClick={() => onDelete(person.id)}>
             delete
           </button>
@@ -64,57 +62,57 @@ const App = () => {
   }, [])
 
   const addPerson = event => {
-  event.preventDefault()
+    event.preventDefault()
 
-  const existingPerson = persons.find(
-    person => person.name === newName
-  )
-
-  if (existingPerson) {
-    const confirmed = window.confirm(
-      `${newName} is already added to phonebook, replace the old number with a new one?`
+    const existingPerson = persons.find(
+      person => person.name === newName
     )
 
-    if (!confirmed) {
+    if (existingPerson) {
+      const confirmed = window.confirm(
+        `${newName} is already added to phonebook, replace the old number with a new one?`
+      )
+
+      if (!confirmed) {
+        return
+      }
+
+      const updatedPerson = {
+        ...existingPerson,
+        number: newNumber
+      }
+
+      personService
+        .update(existingPerson.id, updatedPerson)
+        .then(response => {
+          setPersons(
+            persons.map(person =>
+              person.id === existingPerson.id
+                ? response.data
+                : person
+            )
+          )
+
+          setNewName('')
+          setNewNumber('')
+        })
+
       return
     }
 
-    const updatedPerson = {
-      ...existingPerson,
+    const personObject = {
+      name: newName,
       number: newNumber
     }
 
     personService
-      .update(existingPerson.id, updatedPerson)
+      .create(personObject)
       .then(response => {
-        setPersons(
-          persons.map(person =>
-            person.id === existingPerson.id
-              ? response.data
-              : person
-          )
-        )
-
+        setPersons(persons.concat(response.data))
         setNewName('')
         setNewNumber('')
       })
-
-    return
   }
-
-  const personObject = {
-    name: newName,
-    number: newNumber
-  }
-
-  personService
-    .create(personObject)
-    .then(response => {
-      setPersons(persons.concat(response.data))
-      setNewName('')
-      setNewNumber('')
-    })
-}
 
   const deletePerson = id => {
     const person = persons.find(person => person.id === id)
