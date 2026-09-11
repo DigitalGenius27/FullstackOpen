@@ -1,5 +1,50 @@
 import { useState } from 'react'
 
+const Filter = ({ search, onChange }) => {
+  return (
+    <div>
+      filter shown with{' '}
+      <input value={search} onChange={onChange} />
+    </div>
+  )
+}
+
+const PersonForm = ({
+  onSubmit,
+  newName,
+  onNameChange,
+  newNumber,
+  onNumberChange
+}) => {
+  return (
+    <form onSubmit={onSubmit}>
+      <div>
+        name: <input value={newName} onChange={onNameChange} />
+      </div>
+
+      <div>
+        number: <input value={newNumber} onChange={onNumberChange} />
+      </div>
+
+      <div>
+        <button type="submit">add</button>
+      </div>
+    </form>
+  )
+}
+
+const Persons = ({ persons }) => {
+  return (
+    <div>
+      {persons.map(person =>
+        <p key={person.name}>
+          {person.name} {person.number}
+        </p>
+      )}
+    </div>
+  )
+}
+
 const App = () => {
   const [persons, setPersons] = useState([
     { name: 'Arto Hellas', number: '040-123456' },
@@ -50,34 +95,24 @@ const App = () => {
     <div>
       <h2>Phonebook</h2>
 
-      <div>
-        filter shown with{' '}
-        <input value={search} onChange={handleSearchChange} />
-      </div>
+      <Filter
+        search={search}
+        onChange={handleSearchChange}
+      />
 
       <h3>Add a new</h3>
 
-      <form onSubmit={addPerson}>
-        <div>
-          name: <input value={newName} onChange={handleNameChange} />
-        </div>
-
-        <div>
-          number: <input value={newNumber} onChange={handleNumberChange} />
-        </div>
-
-        <div>
-          <button type="submit">add</button>
-        </div>
-      </form>
+      <PersonForm
+        onSubmit={addPerson}
+        newName={newName}
+        onNameChange={handleNameChange}
+        newNumber={newNumber}
+        onNumberChange={handleNumberChange}
+      />
 
       <h3>Numbers</h3>
 
-      {personsToShow.map(person =>
-        <p key={person.name}>
-          {person.name} {person.number}
-        </p>
-      )}
+      <Persons persons={personsToShow} />
     </div>
   )
 }
