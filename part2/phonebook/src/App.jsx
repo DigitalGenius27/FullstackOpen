@@ -1,6 +1,18 @@
 import { useState, useEffect } from 'react'
 import personService from './services/persons'
 
+const Notification = ({ message, type }) => {
+  if (message === null) {
+    return null
+  }
+
+  return (
+    <div className={type}>
+      {message}
+    </div>
+  )
+}
+
 const Filter = ({ search, onChange }) => {
   return (
     <div>
@@ -22,9 +34,11 @@ const PersonForm = ({
       <div>
         name: <input value={newName} onChange={onNameChange} />
       </div>
+
       <div>
         number: <input value={newNumber} onChange={onNumberChange} />
       </div>
+
       <div>
         <button type="submit">add</button>
       </div>
@@ -37,7 +51,7 @@ const Persons = ({ persons, onDelete }) => {
     <div>
       {persons.map(person =>
         <p key={person.id}>
-          {person.name} {person.number}
+          {person.name} {person.number}{' '}
           <button onClick={() => onDelete(person.id)}>
             delete
           </button>
@@ -53,13 +67,28 @@ const App = () => {
   const [newNumber, setNewNumber] = useState('')
   const [search, setSearch] = useState('')
 
+  const [notification, setNotification] = useState(null)
+  const [notificationType, setNotificationType] = useState('success')
+
   useEffect(() => {
     personService
       .getAll()
       .then(response => {
         setPersons(response.data)
       })
+      .catch(error => {
+        console.log(error)
+      })
   }, [])
+
+  const showNotification = (message, type) => {
+    setNotification(message)
+    setNotificationType(type)
+
+    setTimeout(() => {
+      setNotification(null)
+    }, 5000)
+  }
 
   const addPerson = event => {
     event.preventDefault()
@@ -95,6 +124,17 @@ const App = () => {
 
           setNewName('')
           setNewNumber('')
+
+          showNotification(
+            `Changed ${newName}'s number`,
+            'success'
+          )
+        })
+        .catch(() => {
+          showNotification(
+            `Information of ${newName} has already been removed from server`,
+            'error'
+          )
         })
 
       return
@@ -111,6 +151,17 @@ const App = () => {
         setPersons(persons.concat(response.data))
         setNewName('')
         setNewNumber('')
+
+        showNotification(
+          `Added ${newName}`,
+          'success'
+        )
+      })
+      .catch(() => {
+        showNotification(
+          `Failed to add ${newName}`,
+          'error'
+        )
       })
   }
 
@@ -123,6 +174,17 @@ const App = () => {
         .then(() => {
           setPersons(
             persons.filter(person => person.id !== id)
+          )
+
+          showNotification(
+            `Deleted ${person.name}`,
+            'success'
+          )
+        })
+        .catch(() => {
+          showNotification(
+            `Information of ${person.name} has already been removed from server`,
+            'error'
           )
         })
     }
@@ -147,6 +209,11 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+
+      <Notification
+        message={notification}
+        type={notificationType}
+      />
 
       <Filter
         search={search}
