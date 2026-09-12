@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+
 import personService from './services/persons'
 
 const Notification = ({ message, type }) => {
@@ -34,11 +35,9 @@ const PersonForm = ({
       <div>
         name: <input value={newName} onChange={onNameChange} />
       </div>
-
       <div>
         number: <input value={newNumber} onChange={onNumberChange} />
       </div>
-
       <div>
         <button type="submit">add</button>
       </div>
@@ -50,9 +49,9 @@ const Persons = ({ persons, onDelete }) => {
   return (
     <div>
       {persons.map(person =>
-        <p key={person.id}>
+        <p key={person._id}>
           {person.name} {person.number}{' '}
-          <button onClick={() => onDelete(person.id)}>
+          <button onClick={() => onDelete(person._id)}>
             delete
           </button>
         </p>
@@ -66,7 +65,6 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [search, setSearch] = useState('')
-
   const [notification, setNotification] = useState(null)
   const [notificationType, setNotificationType] = useState('success')
 
@@ -112,11 +110,11 @@ const App = () => {
       }
 
       personService
-        .update(existingPerson.id, updatedPerson)
+        .update(existingPerson._id, updatedPerson)
         .then(response => {
           setPersons(
             persons.map(person =>
-              person.id === existingPerson.id
+              person._id === existingPerson._id
                 ? response.data
                 : person
             )
@@ -130,9 +128,9 @@ const App = () => {
             'success'
           )
         })
-        .catch(() => {
+        .catch(error => {
           showNotification(
-            `Information of ${newName} has already been removed from server`,
+            error.response.data.error,
             'error'
           )
         })
@@ -157,23 +155,23 @@ const App = () => {
           'success'
         )
       })
-      .catch(() => {
+      .catch(error => {
         showNotification(
-          `Failed to add ${newName}`,
+          error.response.data.error,
           'error'
         )
       })
   }
 
   const deletePerson = id => {
-    const person = persons.find(person => person.id === id)
+    const person = persons.find(person => person._id === id)
 
     if (window.confirm(`Delete ${person.name}?`)) {
       personService
         .remove(id)
         .then(() => {
           setPersons(
-            persons.filter(person => person.id !== id)
+            persons.filter(person => person._id !== id)
           )
 
           showNotification(
