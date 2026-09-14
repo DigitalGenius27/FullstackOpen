@@ -3,26 +3,22 @@ const cors = require('cors')
 
 const { MONGODB_URI, PORT } = require('./utils/config')
 const { connectToDatabase } = require('./utils/mongo')
-const Blog = require('./models/blog')
+const middleware = require('./utils/middleware')
+
+const blogsRouter = require('./routes/blogs')
+const usersRouter = require('./routes/users')
+const loginRouter = require('./routes/login')
 
 const app = express()
 
 app.use(cors())
 app.use(express.json())
 
-app.get('/api/blogs', async (request, response) => {
-  const blogs = await Blog.find({})
+app.use(middleware.tokenExtractor)
 
-  response.json(blogs)
-})
-
-app.post('/api/blogs', async (request, response) => {
-  const blog = new Blog(request.body)
-
-  const savedBlog = await blog.save()
-
-  response.status(201).json(savedBlog)
-})
+app.use('/api/blogs', blogsRouter)
+app.use('/api/users', usersRouter)
+app.use('/api/login', loginRouter)
 
 const errorHandler = (error, request, response, next) => {
   console.error(error.message)
@@ -30,6 +26,12 @@ const errorHandler = (error, request, response, next) => {
   if (error.name === 'ValidationError') {
     return response.status(400).json({
       error: error.message
+    })
+  }
+
+  if (error.name === 'CastError') {
+    return response.status(400).json({
+      error: 'malformatted id'
     })
   }
 
@@ -45,32 +47,5 @@ if (require.main === module) {
     })
   })
 }
-
-app.delete('/api/blogs/:id', async (request, response) => {
-  await Blog.findByIdAndDelete(request.params.id)
-
-  response.status(204).end()
-})
-
-app.put('/api/blogs/:id', async (request, response) => {
-  const blog = {
-    title: request.body.title,
-    author: request.body.author,
-    url: request.body.url,
-    likes: request.body.likes
-  }
-
-  const updatedBlog = await Blog.findByIdAndUpdate(
-    request.params.id,
-    blog,
-    { new: true, runValidators: true }
-  )
-
-  if (!updatedBlog) {
-    return response.status(404).end()
-  }
-
-  response.json(updatedBlog)
-})
 
 module.exports = app
