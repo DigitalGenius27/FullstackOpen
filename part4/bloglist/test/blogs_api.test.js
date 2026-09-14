@@ -108,6 +108,50 @@ describe('POST /api/blogs', () => {
   })
 })
 
+describe('DELETE /api/blogs/:id', () => {
+  test('a blog can be deleted', async () => {
+    const response = await api.get('/api/blogs')
+
+    const blogToDelete = response.body[0]
+
+    await api
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .expect(204)
+
+    const blogsAfterDelete = await api.get('/api/blogs')
+
+    assert.strictEqual(
+      blogsAfterDelete.body.length,
+      initialBlogs.length - 1
+    )
+
+    const ids = blogsAfterDelete.body.map(blog => blog.id)
+
+    assert(!ids.includes(blogToDelete.id))
+  })
+})
+
+describe('PUT /api/blogs/:id', () => {
+  test('a blog can be updated', async () => {
+    const response = await api.get('/api/blogs')
+
+    const blogToUpdate = response.body[0]
+
+    const updatedBlog = {
+      ...blogToUpdate,
+      likes: blogToUpdate.likes + 1
+    }
+
+    const result = await api
+      .put(`/api/blogs/${blogToUpdate.id}`)
+      .send(updatedBlog)
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+
+    assert.strictEqual(result.body.likes, blogToUpdate.likes + 1)
+  })
+})
+
 after(async () => {
   await Blog.deleteMany({})
 })
